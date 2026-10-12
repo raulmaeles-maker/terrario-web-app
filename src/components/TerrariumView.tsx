@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Edit2, Save } from 'lucide-react';
+import { Edit2, Save, Image, Sliders, Power, Cpu } from 'lucide-react';
 import { mqttService } from '../lib/mqtt';
 import type { TerrariumData } from '../lib/mqtt';
 import { PIN_MAP } from '../lib/constants'; 
@@ -13,7 +13,6 @@ interface TerrariumNode {
   name: string;
   x: number;
   y: number;
-  // Para sensores
   // Para sensores
   temp?: number;
   hum?: number;
@@ -57,6 +56,7 @@ const initialNodes: TerrariumNode[] = [
 
 export function TerrariumView({ telemetry }: TerrariumViewProps) {
   const [nodes, setNodes] = useState<TerrariumNode[]>(initialNodes);
+  const [viewMode, setViewMode] = useState<'photo' | 'panel'>('photo');
   const [isEditing, setIsEditing] = useState(false);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -173,152 +173,245 @@ export function TerrariumView({ telemetry }: TerrariumViewProps) {
   };
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-6 shadow-sm flex flex-col relative w-full h-full">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Vista del Terrario</h2>
-        <button 
-          onClick={toggleEdit}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-            isEditing 
-              ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' 
-              : 'bg-secondary/50 text-foreground hover:bg-secondary'
-          }`}
-        >
-          {isEditing ? <Save className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
-          {isEditing ? 'Guardar Layout' : 'Editar Posiciones'}
-        </button>
+    <div className="bg-card border border-border rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-sm flex flex-col relative w-full h-full">
+      {/* Header con Título, Selector de Vista (Foto / Mandos) y Botón Editar */}
+      <div className="flex flex-wrap justify-between items-center gap-2 mb-3 sm:mb-4">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <h2 className="text-base sm:text-xl font-bold">Vista del Terrario</h2>
+          
+          {/* Switch de Modo Vista */}
+          <div className="flex bg-secondary/60 p-0.5 rounded-lg border border-border text-xs font-semibold">
+            <button
+              onClick={() => setViewMode('photo')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-colors ${
+                viewMode === 'photo' ? 'bg-card text-foreground shadow-sm font-bold' : 'text-foreground/60 hover:text-foreground'
+              }`}
+            >
+              <Image className="w-3.5 h-3.5" /> <span className="hidden xs:inline">Foto</span>
+            </button>
+            <button
+              onClick={() => setViewMode('panel')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-colors ${
+                viewMode === 'panel' ? 'bg-card text-foreground shadow-sm font-bold' : 'text-foreground/60 hover:text-foreground'
+              }`}
+            >
+              <Sliders className="w-3.5 h-3.5" /> <span className="hidden xs:inline">Mandos</span>
+            </button>
+          </div>
+        </div>
+
+        {viewMode === 'photo' && (
+          <button 
+            onClick={toggleEdit}
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+              isEditing 
+                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' 
+                : 'bg-secondary/50 text-foreground hover:bg-secondary'
+            }`}
+          >
+            {isEditing ? <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+            {isEditing ? 'Guardar' : 'Editar Posiciones'}
+          </button>
+        )}
       </div>
 
-      {/* El contenedor ahora deja que la imagen defina la altura, sin recortarla */}
-      <div 
-        ref={containerRef}
-        className={`relative w-full rounded-xl overflow-hidden bg-black/50 touch-none select-none border-2 transition-colors flex items-center justify-center ${
-          isEditing ? 'border-primary/50 border-dashed' : 'border-border/50'
-        }`}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
-      >
-        <img 
-          src="/TerrarioPhoto.jpg.jpeg" 
-          onError={(e) => {
-            e.currentTarget.src = "/TerrarioPhoto1.jpg.jpeg";
-          }}
-          alt="Terrario" 
-          className={`w-full h-auto max-h-[80vh] object-contain transition-opacity duration-300 ${isEditing ? 'opacity-50' : 'opacity-90'}`}
-          draggable={false}
-        />
-        
-        {nodes.map(node => {
-          const isControl = node.type === 'control';
+      {viewMode === 'photo' ? (
+        /* ================= VISTA FOTO INTERACTIVA ================= */
+        <div 
+          ref={containerRef}
+          className={`relative w-full rounded-xl overflow-hidden bg-black/50 touch-none select-none border-2 transition-colors flex items-center justify-center ${
+            isEditing ? 'border-primary/50 border-dashed' : 'border-border/50'
+          }`}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerLeave={handlePointerUp}
+        >
+          <img 
+            src="/TerrarioPhoto.jpg.jpeg" 
+            onError={(e) => {
+              e.currentTarget.src = "/TerrarioPhoto1.jpg.jpeg";
+            }}
+            alt="Terrario" 
+            className={`w-full h-auto max-h-[80vh] object-contain transition-opacity duration-300 ${isEditing ? 'opacity-50' : 'opacity-90'}`}
+            draggable={false}
+          />
+          
+          {nodes.map(node => {
+            const isControl = node.type === 'control';
 
-          return (
-            <div
-              key={node.id}
-              onPointerDown={(e) => handlePointerDown(node.id, e)}
-              style={{ 
-                left: `${node.x}%`, 
-                top: `${node.y}%`,
-                transform: 'translate(-50%, -50%)',
-                zIndex: draggingId === node.id ? 50 : 10
-              }}
-              className={`absolute flex flex-col items-center justify-center px-3 py-2 rounded-xl backdrop-blur-md border 
-                ${isEditing ? 'cursor-grab border-primary border-dashed bg-card/80 shadow-primary/20 hover:scale-105' : 'border-border/40 bg-card/70'}
-                ${draggingId === node.id ? 'cursor-grabbing scale-110 shadow-2xl bg-card border-solid' : 'shadow-lg hover:shadow-xl hover:bg-card'}
-                transition-[transform,shadow,background-color,border-color] duration-200 whitespace-nowrap min-w-[120px] max-w-[160px]
-              `}
-              onClick={() => isControl && toggleControl(node.id)}
-            >
-              {/* Header Label */}
-              <div className="flex items-center gap-1.5 mb-1.5 w-full justify-center">
-                {isEditing && <span className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0"></span>}
-                <p className={`text-[11px] font-bold uppercase tracking-wider text-foreground/90 truncate ${isControl && !isEditing && !node.isDisabled ? 'cursor-pointer' : ''}`}>
-                  {node.name}
-                </p>
-              </div>
-
-              {/* Contenido (Valores Sensor o Switch Control) */}
-              {isControl ? (
-                <div className={`flex flex-col items-center w-full gap-1.5 ${!isEditing && !node.isDisabled ? 'cursor-pointer' : ''}`}>
-                  {/* Switch */}
-                  <div className={`w-12 h-6 rounded-full relative transition-colors border shadow-inner ${node.isDisabled ? 'bg-background border-border opacity-50 cursor-not-allowed' : (node.isActive ? node.activeColor : 'bg-background border-border')}`}>
-                    <div className={`absolute top-1 w-4 h-4 rounded-full shadow-sm transition-all duration-300 ${node.isActive && !node.isDisabled ? 'right-1 bg-white' : 'left-1 bg-foreground/30'}`}></div>
-                  </div>
-                  {/* Subtitle */}
-                  <p className="text-[10px] text-foreground/60 leading-tight">
-                    {node.subLabel}
+            return (
+              <div
+                key={node.id}
+                onPointerDown={(e) => handlePointerDown(node.id, e)}
+                style={{ 
+                  left: `${node.x}%`, 
+                  top: `${node.y}%`,
+                  transform: 'translate(-50%, -50%)',
+                  zIndex: draggingId === node.id ? 50 : 10
+                }}
+                className={`absolute flex flex-col items-center justify-center px-1.5 py-1 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl backdrop-blur-md border 
+                  ${isEditing ? 'cursor-grab border-primary border-dashed bg-card/85 shadow-primary/20 hover:scale-105' : 'border-border/40 bg-card/75'}
+                  ${draggingId === node.id ? 'cursor-grabbing scale-110 shadow-2xl bg-card border-solid' : 'shadow-md hover:shadow-xl hover:bg-card'}
+                  transition-[transform,shadow,background-color,border-color] duration-200 whitespace-nowrap min-w-[70px] sm:min-w-[120px] max-w-[95px] sm:max-w-[160px]
+                `}
+                onClick={() => isControl && toggleControl(node.id)}
+              >
+                {/* Header Label */}
+                <div className="flex items-center gap-1 mb-0.5 sm:mb-1 w-full justify-center">
+                  {isEditing && <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary animate-pulse shrink-0"></span>}
+                  <p className={`text-[9px] sm:text-[11px] font-bold uppercase tracking-tight sm:tracking-wider text-foreground/90 truncate ${isControl && !isEditing && !node.isDisabled ? 'cursor-pointer' : ''}`}>
+                    {node.name}
                   </p>
                 </div>
-              ) : (
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 text-sm font-bold bg-background/50 px-2 py-1 rounded-lg w-full">
-                  {/* Mostrar solo lo que corresponde según displayMode del nodo */}
-                  {(node as any).displayMode === 'both' && (
-                    <>
-                      {node.temp !== undefined ? <span className="text-red-400 drop-shadow-sm">{node.temp.toFixed(1)}°C</span> : <span className="text-foreground/30">--.-°C</span>}
-                      {node.hum  !== undefined ? <span className="text-blue-400 drop-shadow-sm">{node.hum.toFixed(0)}%</span>  : <span className="text-foreground/30">--%</span>}
-                    </>
-                  )}
-                  {(node as any).displayMode === 'temp' && (
-                    node.temp !== undefined ? <span className="text-red-400 drop-shadow-sm">{node.temp.toFixed(1)}°C</span> : <span className="text-foreground/30">--.-°C</span>
-                  )}
-                  {(node as any).displayMode === 'hum' && (
-                    node.hum !== undefined ? <span className="text-blue-400 drop-shadow-sm">{node.hum.toFixed(0)}%</span> : <span className="text-foreground/30">--%</span>
-                  )}
-                  {(node as any).displayMode === 'dist' && (
-                    node.waterDist !== undefined
-                      ? <span className="text-cyan-400 drop-shadow-sm text-base">{node.waterDist.toFixed(1)} cm</span>
-                      : <span className="text-foreground/30">-- cm</span>
-                  )}
-                  {(node as any).displayMode === 'waterlevel' && (() => {
-                    // Distancia mínima (depósito lleno) y máxima (depósito vacío)
-                    // *** Ajusta estos valores según tu instalación ***
-                    const DIST_LLENO = 26;  // cm sensor→agua cuando está lleno
-                    const DIST_VACIO = 30;  // cm sensor→agua cuando está vacío
-                    const dist = node.waterDist;
-                    const pct = dist !== undefined
-                      ? Math.max(0, Math.min(100, Math.round((1 - (dist - DIST_LLENO) / (DIST_VACIO - DIST_LLENO)) * 100)))
-                      : null;
-                    const color = pct === null ? 'bg-foreground/20' : pct > 60 ? 'bg-cyan-400' : pct > 25 ? 'bg-yellow-400' : 'bg-red-500';
-                    return (
-                      <div className="flex flex-col items-center w-full gap-1">
-                        <span className="text-cyan-400 text-xs font-bold">
-                          {pct !== null ? `${pct}%` : '--'}
-                        </span>
-                        <div className="w-full h-2.5 bg-background/60 rounded-full overflow-hidden border border-border/40">
-                          <div
-                            className={`h-full rounded-full transition-all duration-700 ${color}`}
-                            style={{ width: pct !== null ? `${pct}%` : '0%' }}
-                          />
+
+                {/* Contenido (Valores Sensor o Switch Control) */}
+                {isControl ? (
+                  <div className={`flex flex-col items-center w-full gap-0.5 sm:gap-1.5 ${!isEditing && !node.isDisabled ? 'cursor-pointer' : ''}`}>
+                    {/* Switch adaptativo */}
+                    <div className={`w-8 h-4 sm:w-12 sm:h-6 rounded-full relative transition-colors border shadow-inner ${node.isDisabled ? 'bg-background border-border opacity-50 cursor-not-allowed' : (node.isActive ? node.activeColor : 'bg-background border-border')}`}>
+                      <div className={`absolute top-0.5 sm:top-1 w-2.5 h-2.5 sm:w-4 sm:h-4 rounded-full shadow-sm transition-all duration-300 ${node.isActive && !node.isDisabled ? 'right-0.5 sm:right-1 bg-white' : 'left-0.5 sm:left-1 bg-foreground/30'}`}></div>
+                    </div>
+                    {/* Subtitle solo en pantallas sm hacia arriba */}
+                    <p className="hidden sm:block text-[10px] text-foreground/60 leading-tight">
+                      {node.subLabel}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 text-[9px] sm:text-xs font-bold bg-background/50 px-1 sm:px-2 py-0.5 rounded sm:rounded-lg w-full">
+                    {/* Mostrar según displayMode del nodo */}
+                    {(node as any).displayMode === 'both' && (
+                      <>
+                        {node.temp !== undefined ? <span className="text-red-400 drop-shadow-sm">{node.temp.toFixed(1)}°</span> : <span className="text-foreground/30">--°</span>}
+                        {node.hum  !== undefined ? <span className="text-blue-400 drop-shadow-sm">{node.hum.toFixed(0)}%</span>  : <span className="text-foreground/30">--%</span>}
+                      </>
+                    )}
+                    {(node as any).displayMode === 'temp' && (
+                      node.temp !== undefined ? <span className="text-red-400 drop-shadow-sm">{node.temp.toFixed(1)}°C</span> : <span className="text-foreground/30">--°C</span>
+                    )}
+                    {(node as any).displayMode === 'hum' && (
+                      node.hum !== undefined ? <span className="text-blue-400 drop-shadow-sm">{node.hum.toFixed(0)}%</span> : <span className="text-foreground/30">--%</span>
+                    )}
+                    {(node as any).displayMode === 'dist' && (
+                      node.waterDist !== undefined
+                        ? <span className="text-cyan-400 drop-shadow-sm text-[10px] sm:text-sm">{node.waterDist.toFixed(1)}cm</span>
+                        : <span className="text-foreground/30">--cm</span>
+                    )}
+                    {(node as any).displayMode === 'waterlevel' && (() => {
+                      const DIST_LLENO = 26;
+                      const DIST_VACIO = 30;
+                      const dist = node.waterDist;
+                      const pct = dist !== undefined
+                        ? Math.max(0, Math.min(100, Math.round((1 - (dist - DIST_LLENO) / (DIST_VACIO - DIST_LLENO)) * 100)))
+                        : null;
+                      const color = pct === null ? 'bg-foreground/20' : pct > 60 ? 'bg-cyan-400' : pct > 25 ? 'bg-yellow-400' : 'bg-red-500';
+                      return (
+                        <div className="flex flex-col items-center w-full gap-0.5">
+                          <span className="text-cyan-400 text-[9px] sm:text-xs font-bold">
+                            {pct !== null ? `${pct}%` : '--'}
+                          </span>
+                          <div className="w-full h-1.5 sm:h-2 bg-background/60 rounded-full overflow-hidden border border-border/40">
+                            <div
+                              className={`h-full rounded-full transition-all duration-700 ${color}`}
+                              style={{ width: pct !== null ? `${pct}%` : '0%' }}
+                            />
+                          </div>
                         </div>
-                        <span className="text-foreground/40 text-[9px]">
-                          {dist !== undefined ? `${dist.toFixed(1)} cm` : '--'}
-                        </span>
+                      );
+                    })()}
+                    {(node as any).displayMode === 'level' && node.isLevelMax !== undefined && (
+                      <span className={node.isLevelMax ? 'text-red-500 font-bold' : 'text-green-500'}>
+                        {node.isLevelMax ? '⚠ LLENO' : '✓ OK'}
+                      </span>
+                    )}
+                    {!(node as any).displayMode && (
+                      <>
+                        {node.temp !== undefined && <span className="text-red-400">{node.temp.toFixed(1)}°</span>}
+                        {node.hum  !== undefined && <span className="text-blue-400">{node.hum.toFixed(0)}%</span>}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* ================= VISTA PANEL TÁCTIL (MÓVIL / ESCRITORIO) ================= */
+        <div className="space-y-6">
+          {/* Sección Actuadores / Relés */}
+          <div>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-foreground/70 mb-3 flex items-center gap-2">
+              <Power className="w-4 h-4 text-primary" /> Actuadores y Relés (10)
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2.5 sm:gap-3">
+              {nodes.filter(n => n.type === 'control').map(ctrl => {
+                const pinNum = PIN_MAP[ctrl.id];
+                return (
+                  <div
+                    key={ctrl.id}
+                    onClick={() => toggleControl(ctrl.id)}
+                    className={`p-3.5 rounded-xl border transition-all cursor-pointer select-none flex items-center justify-between ${
+                      ctrl.isActive 
+                        ? 'bg-card border-primary shadow-md shadow-primary/10' 
+                        : 'bg-card/60 border-border hover:bg-card'
+                    }`}
+                  >
+                    <div className="min-w-0 flex-1 pr-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-2 h-2 rounded-full ${ctrl.isActive ? (ctrl.activeColor || 'bg-primary animate-pulse') : 'bg-foreground/20'}`} />
+                        <h4 className="text-sm font-bold truncate">{ctrl.name}</h4>
+                        <span className="text-[10px] text-foreground/40 font-mono">R{pinNum}</span>
                       </div>
-                    );
-                  })()}
-                  {(node as any).displayMode === 'level' && node.isLevelMax !== undefined && (
-                    <span className={node.isLevelMax ? 'text-red-500 font-bold drop-shadow-sm' : 'text-green-500 drop-shadow-sm'}>
-                      {node.isLevelMax ? '⚠ LLENO' : '✓ OK'}
-                    </span>
-                  )}
-                  {/* Fallback si no tiene displayMode (compatibilidad) */}
-                  {!(node as any).displayMode && (
-                    <>
-                      {node.temp !== undefined && <span className="text-red-400 drop-shadow-sm">{node.temp.toFixed(1)}°C</span>}
-                      {node.hum  !== undefined && <span className="text-blue-400 drop-shadow-sm">{node.hum.toFixed(0)}%</span>}
-                    </>
-                  )}
-                </div>
-              )}
+                      <p className="text-xs text-foreground/50 truncate mt-0.5">{ctrl.subLabel}</p>
+                    </div>
+
+                    {/* Interruptor Táctil */}
+                    <div className={`w-12 h-6 rounded-full relative transition-colors border shadow-inner flex-shrink-0 ${
+                      ctrl.isActive ? (ctrl.activeColor || 'bg-primary') : 'bg-secondary border-border'
+                    }`}>
+                      <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-all duration-200 ${
+                        ctrl.isActive ? 'right-0.5' : 'left-0.5'
+                      }`} />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          )
-        })}
-      </div>
+          </div>
+
+          {/* Sección Sensores Detallados */}
+          <div>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-foreground/70 mb-3 flex items-center gap-2">
+              <Cpu className="w-4 h-4 text-primary" /> Sensores del Sistema
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+              {nodes.filter(n => n.type === 'sensor').map(sensor => {
+                return (
+                  <div key={sensor.id} className="bg-card/70 border border-border rounded-xl p-3 shadow-sm flex flex-col justify-between">
+                    <p className="text-xs font-semibold text-foreground/60 truncate mb-1">{sensor.name}</p>
+                    <div className="flex items-baseline gap-2">
+                      {sensor.temp !== undefined && (
+                        <span className="text-lg font-bold text-red-400 font-mono">{sensor.temp.toFixed(1)}°C</span>
+                      )}
+                      {sensor.hum !== undefined && (
+                        <span className="text-lg font-bold text-blue-400 font-mono">{sensor.hum.toFixed(0)}%</span>
+                      )}
+                      {sensor.waterDist !== undefined && (
+                        <span className="text-lg font-bold text-cyan-400 font-mono">{sensor.waterDist.toFixed(1)} cm</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
       
-      {isEditing && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-md px-4 py-2 rounded-full border border-primary/20 shadow-xl z-50 animate-bounce">
-          <p className="text-xs text-primary font-medium">
-            Arrastra las tarjetas de sensores y controles sobre la foto
+      {isEditing && viewMode === 'photo' && (
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-background/90 backdrop-blur-md px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-primary/30 shadow-xl z-50 animate-bounce">
+          <p className="text-[11px] sm:text-xs text-primary font-medium text-center">
+            Arrastra las tarjetas sobre la foto y pulsa Guardar
           </p>
         </div>
       )}

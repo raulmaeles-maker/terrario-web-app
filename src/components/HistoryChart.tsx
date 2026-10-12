@@ -29,17 +29,17 @@ export function HistoryChart() {
   };
 
   return (
-    <div className="w-full h-[400px] pt-4 relative">
-      <div className="absolute top-0 right-4 flex items-center gap-4 z-20">
+    <div className="w-full h-[300px] sm:h-[400px] pt-4 relative">
+      <div className="absolute top-0 right-2 sm:right-4 flex items-center gap-2 sm:gap-4 z-20">
         <span className="text-xs text-foreground/50 font-medium hidden md:flex items-center gap-1 bg-secondary/50 px-2 py-1 rounded-md">
           <Database className="w-3 h-3" /> LittleFS Cache (ESP32)
         </span>
         <button 
           onClick={handleRefresh}
-          className="p-2 bg-secondary/80 hover:bg-secondary rounded-lg transition-colors border border-border shadow-sm"
+          className="p-1.5 sm:p-2 bg-secondary/80 hover:bg-secondary rounded-lg transition-colors border border-border shadow-sm"
           title="Actualizar Histórico desde el Gateway"
         >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
@@ -58,7 +58,7 @@ export function HistoryChart() {
         </div>
       ) : (
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 15, right: 20, bottom: 15, left: 0 }}>
+        <LineChart data={data} margin={{ top: 15, right: 10, bottom: 15, left: -15 }}>
           <XAxis 
             dataKey="time" 
             stroke="hsl(var(--foreground) / 0.5)" 

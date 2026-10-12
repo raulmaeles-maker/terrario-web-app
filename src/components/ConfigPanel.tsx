@@ -162,90 +162,90 @@ export function ConfigPanel({ telemetry }: ConfigPanelProps) {
     setPrograms(programs.map(p => p.id === id ? { ...p, [field]: value } : p));
 
   return (
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 pb-24 md:pb-8">
 
       {/* ===== AJUSTES GLOBALES ===== */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold flex items-center gap-2 mb-1">
-          <Settings2 className="w-6 h-6 text-primary" /> Ajustes Globales
+      <div className="mb-6 sm:mb-8">
+        <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 mb-1">
+          <Settings2 className="w-5 h-5 sm:w-6 sm:h-6 text-primary" /> Ajustes Globales
         </h2>
-        <p className="text-foreground/50 text-sm">Parámetros almacenados en la memoria interna del microcontrolador.</p>
+        <p className="text-foreground/50 text-xs sm:text-sm">Parámetros almacenados en la memoria interna del microcontrolador.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
         {[
           { label: 'Hora de Encendido', icon: <Clock className="w-4 h-4 text-amber-400" />, value: hOn, set: setHOn, unit: 'h', step: 1 },
           { label: 'Hora de Apagado',  icon: <Clock className="w-4 h-4 text-indigo-400" />,  value: hOff, set: setHOff, unit: 'h', step: 1 },
           { label: 'Dist. Llenado (Boya)', icon: <Settings2 className="w-4 h-4 text-blue-400" />, value: distLlenado, set: setDistLlenado, unit: 'cm', step: 1 },
         ].map(({ label, icon, value, set, unit, step }) => (
-          <div key={label} className="bg-card border border-border rounded-2xl p-5 shadow-sm">
-            <div className="flex justify-between items-center mb-3">
+          <div key={label} className="bg-card border border-border rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-sm">
+            <div className="flex justify-between items-center mb-2 sm:mb-3">
               <span className="text-xs font-medium text-foreground/50">{label}</span>
               {icon}
             </div>
             <div className="flex items-center gap-2">
               <input type="number" step={step} value={value} onChange={e => (set as any)(parseFloat(e.target.value))}
-                className="w-full bg-secondary text-xl font-bold rounded-lg px-3 py-2 border-none outline-none focus:ring-2 focus:ring-primary/50" />
-              <span className="text-sm text-foreground/50">{unit}</span>
+                className="w-full bg-secondary text-lg sm:text-xl font-bold rounded-lg px-3 py-1.5 sm:py-2 border-none outline-none focus:ring-2 focus:ring-primary/50" />
+              <span className="text-xs sm:text-sm text-foreground/50">{unit}</span>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="mb-12 flex justify-end">
+      <div className="mb-8 sm:mb-12 flex justify-end">
         <button onClick={handleSaveConfig}
-          className="bg-primary text-primary-foreground font-bold rounded-xl px-6 py-3 flex items-center gap-2 hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
-          <Save className="w-5 h-5" /> Sincronizar con Terrario
+          className="w-full sm:w-auto bg-primary text-primary-foreground font-bold rounded-xl px-5 sm:px-6 py-2.5 sm:py-3 flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20 text-sm sm:text-base">
+          <Save className="w-4 h-4 sm:w-5 sm:h-5" /> Sincronizar con Terrario
         </button>
       </div>
 
       {/* ===== PROGRAMAS ===== */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold flex items-center gap-2 mb-1">
-          <Power className="w-6 h-6 text-primary" /> Programación de Tareas
+      <div className="mb-4 sm:mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 mb-1">
+          <Power className="w-5 h-5 sm:w-6 sm:h-6 text-primary" /> Programación de Tareas
         </h2>
-        <p className="text-foreground/50 text-sm">10 reglas independientes. Selecciona el tipo para ver los campos específicos.</p>
+        <p className="text-foreground/50 text-xs sm:text-sm">10 reglas independientes. Selecciona el tipo para ver los campos específicos.</p>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {programs.map((prog) => {
           const tc = TIPO_CONFIG[prog.tipo] ?? TIPO_CONFIG[1];
           return (
             <div key={prog.id}
-              className={`bg-card border rounded-2xl p-5 shadow-sm transition-all ${prog.activo ? 'border-primary/40 shadow-primary/5' : 'border-border'}`}>
+              className={`bg-card border rounded-xl sm:rounded-2xl p-3.5 sm:p-5 shadow-sm transition-all ${prog.activo ? 'border-primary/40 shadow-primary/5' : 'border-border'}`}>
 
               {/* ==== CABECERA ==== */}
-              <div className="flex flex-wrap gap-3 items-center justify-between mb-4 pb-4 border-b border-border/50">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl font-black text-foreground/15 w-8">#{prog.id + 1}</span>
+              <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 sm:items-center justify-between mb-3 sm:mb-4 pb-3 sm:pb-4 border-b border-border/50">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <span className="text-xl sm:text-2xl font-black text-foreground/15 w-7 sm:w-8">#{prog.id + 1}</span>
 
                   {/* Toggle activo */}
                   <button
                     onClick={() => upd(prog.id, 'activo', !prog.activo)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${prog.activo ? 'bg-primary/20 border-primary/50 text-primary' : 'bg-secondary border-border text-foreground/40'}`}>
+                    className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold border transition-all ${prog.activo ? 'bg-primary/20 border-primary/50 text-primary' : 'bg-secondary border-border text-foreground/40'}`}>
                     {prog.activo ? 'ACTIVO' : 'INACTIVO'}
                   </button>
 
                   {/* Selector tipo */}
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 overflow-x-auto pb-1 sm:pb-0">
                     {[1, 2, 3].map(t => (
                       <button key={t} onClick={() => upd(prog.id, 'tipo', t)}
-                        className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold border transition-all ${prog.tipo === t ? tc.color : 'bg-secondary border-border text-foreground/40 hover:text-foreground'}`}>
-                        {TIPO_CONFIG[t].icon} {TIPO_CONFIG[t].label}
+                        className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold border transition-all whitespace-nowrap ${prog.tipo === t ? tc.color : 'bg-secondary border-border text-foreground/40 hover:text-foreground'}`}>
+                        {TIPO_CONFIG[t].icon} <span className="text-[11px] sm:text-xs">{TIPO_CONFIG[t].label}</span>
                       </button>
                     ))}
                   </div>
                 </div>
 
                 {/* Actuador + Enviar */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto mt-1 sm:mt-0">
                   <select value={prog.actuador} onChange={e => upd(prog.id, 'actuador', +e.target.value)}
-                    className="bg-secondary border border-border rounded-lg px-3 py-1.5 outline-none text-sm font-medium">
+                    className="bg-secondary border border-border rounded-lg px-2.5 py-1.5 outline-none text-xs sm:text-sm font-medium flex-1 sm:flex-initial">
                     {actuadores.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                   </select>
                   <button onClick={() => handleSaveProgram(prog)}
-                    className="bg-secondary hover:bg-primary hover:text-primary-foreground text-sm font-semibold rounded-lg px-4 py-1.5 flex items-center gap-2 transition-colors border border-border">
-                    <Save className="w-4 h-4" /> Enviar
+                    className="bg-secondary hover:bg-primary hover:text-primary-foreground text-xs sm:text-sm font-semibold rounded-lg px-3 sm:px-4 py-1.5 flex items-center gap-1.5 transition-colors border border-border">
+                    <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Enviar
                   </button>
                 </div>
               </div>
