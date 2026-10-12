@@ -57,9 +57,27 @@ const initialNodes: TerrariumNode[] = [
 export function TerrariumView({ telemetry }: TerrariumViewProps) {
   const [nodes, setNodes] = useState<TerrariumNode[]>(initialNodes);
   const [viewMode, setViewMode] = useState<'photo' | 'panel'>('photo');
+  const [photoFilter, setPhotoFilter] = useState<'sensors_only' | 'sensors_lights' | 'all'>(() => {
+    return (localStorage.getItem('terrarium-photo-filter') as any) || 'sensors_only';
+  });
   const [isEditing, setIsEditing] = useState(false);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleFilterChange = (filter: 'sensors_only' | 'sensors_lights' | 'all') => {
+    setPhotoFilter(filter);
+    localStorage.setItem('terrarium-photo-filter', filter);
+  };
+
+  const isNodeVisibleOnPhoto = (node: TerrariumNode) => {
+    if (isEditing) return true; // En modo edición mostrar todos para poder moverlos
+    if (photoFilter === 'all') return true;
+    if (photoFilter === 'sensors_only') return node.type === 'sensor';
+    if (photoFilter === 'sensors_lights') {
+      return node.type === 'sensor' || node.id === 'C_LuzLED' || node.id === 'C_LuzCalor' || node.id === 'C_LuzAcuario';
+    }
+    return true;
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem('terrarium-nodes-positions');
@@ -174,9 +192,9 @@ export function TerrariumView({ telemetry }: TerrariumViewProps) {
 
   return (
     <div className="bg-card border border-border rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-sm flex flex-col relative w-full h-full">
-      {/* Header con Título, Selector de Vista (Foto / Mandos) y Botón Editar */}
+      {/* Header con Título, Selector de Vista (Foto / Mandos), Filtro y Botón Editar */}
       <div className="flex flex-wrap justify-between items-center gap-2 mb-3 sm:mb-4">
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <h2 className="text-base sm:text-xl font-bold">Vista del Terrario</h2>
           
           {/* Switch de Modo Vista */}
@@ -198,6 +216,39 @@ export function TerrariumView({ telemetry }: TerrariumViewProps) {
               <Sliders className="w-3.5 h-3.5" /> <span className="hidden xs:inline">Mandos</span>
             </button>
           </div>
+
+          {/* Filtro de elementos en foto (solo cuando viewMode === 'photo') */}
+          {viewMode === 'photo' && (
+            <div className="flex items-center bg-secondary/50 p-0.5 rounded-lg border border-border text-[11px] font-medium">
+              <button
+                onClick={() => handleFilterChange('sensors_only')}
+                className={`px-2 py-0.5 rounded-md transition-colors ${
+                  photoFilter === 'sensors_only' ? 'bg-card text-foreground font-bold shadow-sm' : 'text-foreground/60 hover:text-foreground'
+                }`}
+                title="Mostrar solo los sensores sobre la foto (los mandos quedan en el panel de abajo)"
+              >
+                Sensores
+              </button>
+              <button
+                onClick={() => handleFilterChange('sensors_lights')}
+                className={`px-2 py-0.5 rounded-md transition-colors ${
+                  photoFilter === 'sensors_lights' ? 'bg-card text-foreground font-bold shadow-sm' : 'text-foreground/60 hover:text-foreground'
+                }`}
+                title="Sensores + Luces principales sobre la foto"
+              >
+                + Luces
+              </button>
+              <button
+                onClick={() => handleFilterChange('all')}
+                className={`px-2 py-0.5 rounded-md transition-colors ${
+                  photoFilter === 'all' ? 'bg-card text-foreground font-bold shadow-sm' : 'text-foreground/60 hover:text-foreground'
+                }`}
+                title="Mostrar los 18 elementos sobre la foto"
+              >
+                Todos
+              </button>
+            </div>
+          )}
         </div>
 
         {viewMode === 'photo' && (
@@ -217,123 +268,175 @@ export function TerrariumView({ telemetry }: TerrariumViewProps) {
 
       {viewMode === 'photo' ? (
         /* ================= VISTA FOTO INTERACTIVA ================= */
-        <div 
-          ref={containerRef}
-          className={`relative w-full rounded-xl overflow-hidden bg-black/50 touch-none select-none border-2 transition-colors flex items-center justify-center ${
-            isEditing ? 'border-primary/50 border-dashed' : 'border-border/50'
-          }`}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerLeave={handlePointerUp}
-        >
-          <img 
-            src="/TerrarioPhoto.jpg.jpeg" 
-            onError={(e) => {
-              e.currentTarget.src = "/TerrarioPhoto1.jpg.jpeg";
-            }}
-            alt="Terrario" 
-            className={`w-full h-auto max-h-[80vh] object-contain transition-opacity duration-300 ${isEditing ? 'opacity-50' : 'opacity-90'}`}
-            draggable={false}
-          />
-          
-          {nodes.map(node => {
-            const isControl = node.type === 'control';
+        <div className="flex flex-col gap-4">
+          {/* Contenedor de la foto: alargado en móvil (h-[440px] con object-cover) para repartir los botones holgadamente */}
+          <div 
+            ref={containerRef}
+            className={`relative w-full rounded-xl overflow-hidden bg-black/60 touch-none select-none border-2 transition-colors flex items-center justify-center min-h-[440px] sm:min-h-0 ${
+              isEditing ? 'border-primary/50 border-dashed' : 'border-border/50'
+            }`}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerUp}
+          >
+            <img 
+              src="/TerrarioPhoto.jpg.jpeg" 
+              onError={(e) => {
+                e.currentTarget.src = "/TerrarioPhoto1.jpg.jpeg";
+              }}
+              alt="Terrario" 
+              className={`w-full h-[440px] sm:h-auto max-h-[85vh] object-cover sm:object-contain transition-opacity duration-300 ${isEditing ? 'opacity-50' : 'opacity-90'}`}
+              draggable={false}
+            />
+            
+            {nodes.map(node => {
+              if (!isNodeVisibleOnPhoto(node)) return null;
 
-            return (
-              <div
-                key={node.id}
-                onPointerDown={(e) => handlePointerDown(node.id, e)}
-                style={{ 
-                  left: `${node.x}%`, 
-                  top: `${node.y}%`,
-                  transform: 'translate(-50%, -50%)',
-                  zIndex: draggingId === node.id ? 50 : 10
-                }}
-                className={`absolute flex flex-col items-center justify-center px-1.5 py-1 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl backdrop-blur-md border 
-                  ${isEditing ? 'cursor-grab border-primary border-dashed bg-card/85 shadow-primary/20 hover:scale-105' : 'border-border/40 bg-card/75'}
-                  ${draggingId === node.id ? 'cursor-grabbing scale-110 shadow-2xl bg-card border-solid' : 'shadow-md hover:shadow-xl hover:bg-card'}
-                  transition-[transform,shadow,background-color,border-color] duration-200 whitespace-nowrap min-w-[70px] sm:min-w-[120px] max-w-[95px] sm:max-w-[160px]
-                `}
-                onClick={() => isControl && toggleControl(node.id)}
-              >
-                {/* Header Label */}
-                <div className="flex items-center gap-1 mb-0.5 sm:mb-1 w-full justify-center">
-                  {isEditing && <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary animate-pulse shrink-0"></span>}
-                  <p className={`text-[9px] sm:text-[11px] font-bold uppercase tracking-tight sm:tracking-wider text-foreground/90 truncate ${isControl && !isEditing && !node.isDisabled ? 'cursor-pointer' : ''}`}>
-                    {node.name}
-                  </p>
-                </div>
+              const isControl = node.type === 'control';
 
-                {/* Contenido (Valores Sensor o Switch Control) */}
-                {isControl ? (
-                  <div className={`flex flex-col items-center w-full gap-0.5 sm:gap-1.5 ${!isEditing && !node.isDisabled ? 'cursor-pointer' : ''}`}>
-                    {/* Switch adaptativo */}
-                    <div className={`w-8 h-4 sm:w-12 sm:h-6 rounded-full relative transition-colors border shadow-inner ${node.isDisabled ? 'bg-background border-border opacity-50 cursor-not-allowed' : (node.isActive ? node.activeColor : 'bg-background border-border')}`}>
-                      <div className={`absolute top-0.5 sm:top-1 w-2.5 h-2.5 sm:w-4 sm:h-4 rounded-full shadow-sm transition-all duration-300 ${node.isActive && !node.isDisabled ? 'right-0.5 sm:right-1 bg-white' : 'left-0.5 sm:left-1 bg-foreground/30'}`}></div>
-                    </div>
-                    {/* Subtitle solo en pantallas sm hacia arriba */}
-                    <p className="hidden sm:block text-[10px] text-foreground/60 leading-tight">
-                      {node.subLabel}
+              return (
+                <div
+                  key={node.id}
+                  onPointerDown={(e) => handlePointerDown(node.id, e)}
+                  style={{ 
+                    left: `${node.x}%`, 
+                    top: `${node.y}%`,
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: draggingId === node.id ? 50 : 10
+                  }}
+                  className={`absolute flex flex-col items-center justify-center px-1.5 py-1 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl backdrop-blur-md border 
+                    ${isEditing ? 'cursor-grab border-primary border-dashed bg-card/85 shadow-primary/20 hover:scale-105' : 'border-border/40 bg-card/75'}
+                    ${draggingId === node.id ? 'cursor-grabbing scale-110 shadow-2xl bg-card border-solid' : 'shadow-md hover:shadow-xl hover:bg-card'}
+                    transition-[transform,shadow,background-color,border-color] duration-200 whitespace-nowrap min-w-[70px] sm:min-w-[120px] max-w-[95px] sm:max-w-[160px]
+                  `}
+                  onClick={() => isControl && toggleControl(node.id)}
+                >
+                  {/* Header Label */}
+                  <div className="flex items-center gap-1 mb-0.5 sm:mb-1 w-full justify-center">
+                    {isEditing && <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary animate-pulse shrink-0"></span>}
+                    <p className={`text-[9px] sm:text-[11px] font-bold uppercase tracking-tight sm:tracking-wider text-foreground/90 truncate ${isControl && !isEditing && !node.isDisabled ? 'cursor-pointer' : ''}`}>
+                      {node.name}
                     </p>
                   </div>
-                ) : (
-                  <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 text-[9px] sm:text-xs font-bold bg-background/50 px-1 sm:px-2 py-0.5 rounded sm:rounded-lg w-full">
-                    {/* Mostrar según displayMode del nodo */}
-                    {(node as any).displayMode === 'both' && (
-                      <>
-                        {node.temp !== undefined ? <span className="text-red-400 drop-shadow-sm">{node.temp.toFixed(1)}°</span> : <span className="text-foreground/30">--°</span>}
-                        {node.hum  !== undefined ? <span className="text-blue-400 drop-shadow-sm">{node.hum.toFixed(0)}%</span>  : <span className="text-foreground/30">--%</span>}
-                      </>
-                    )}
-                    {(node as any).displayMode === 'temp' && (
-                      node.temp !== undefined ? <span className="text-red-400 drop-shadow-sm">{node.temp.toFixed(1)}°C</span> : <span className="text-foreground/30">--°C</span>
-                    )}
-                    {(node as any).displayMode === 'hum' && (
-                      node.hum !== undefined ? <span className="text-blue-400 drop-shadow-sm">{node.hum.toFixed(0)}%</span> : <span className="text-foreground/30">--%</span>
-                    )}
-                    {(node as any).displayMode === 'dist' && (
-                      node.waterDist !== undefined
-                        ? <span className="text-cyan-400 drop-shadow-sm text-[10px] sm:text-sm">{node.waterDist.toFixed(1)}cm</span>
-                        : <span className="text-foreground/30">--cm</span>
-                    )}
-                    {(node as any).displayMode === 'waterlevel' && (() => {
-                      const DIST_LLENO = 26;
-                      const DIST_VACIO = 30;
-                      const dist = node.waterDist;
-                      const pct = dist !== undefined
-                        ? Math.max(0, Math.min(100, Math.round((1 - (dist - DIST_LLENO) / (DIST_VACIO - DIST_LLENO)) * 100)))
-                        : null;
-                      const color = pct === null ? 'bg-foreground/20' : pct > 60 ? 'bg-cyan-400' : pct > 25 ? 'bg-yellow-400' : 'bg-red-500';
-                      return (
-                        <div className="flex flex-col items-center w-full gap-0.5">
-                          <span className="text-cyan-400 text-[9px] sm:text-xs font-bold">
-                            {pct !== null ? `${pct}%` : '--'}
-                          </span>
-                          <div className="w-full h-1.5 sm:h-2 bg-background/60 rounded-full overflow-hidden border border-border/40">
-                            <div
-                              className={`h-full rounded-full transition-all duration-700 ${color}`}
-                              style={{ width: pct !== null ? `${pct}%` : '0%' }}
-                            />
+
+                  {/* Contenido (Valores Sensor o Switch Control) */}
+                  {isControl ? (
+                    <div className={`flex flex-col items-center w-full gap-0.5 sm:gap-1.5 ${!isEditing && !node.isDisabled ? 'cursor-pointer' : ''}`}>
+                      {/* Switch adaptativo */}
+                      <div className={`w-8 h-4 sm:w-12 sm:h-6 rounded-full relative transition-colors border shadow-inner ${node.isDisabled ? 'bg-background border-border opacity-50 cursor-not-allowed' : (node.isActive ? node.activeColor : 'bg-background border-border')}`}>
+                        <div className={`absolute top-0.5 sm:top-1 w-2.5 h-2.5 sm:w-4 sm:h-4 rounded-full shadow-sm transition-all duration-300 ${node.isActive && !node.isDisabled ? 'right-0.5 sm:right-1 bg-white' : 'left-0.5 sm:left-1 bg-foreground/30'}`}></div>
+                      </div>
+                      {/* Subtitle solo en pantallas sm hacia arriba */}
+                      <p className="hidden sm:block text-[10px] text-foreground/60 leading-tight">
+                        {node.subLabel}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 text-[9px] sm:text-xs font-bold bg-background/50 px-1 sm:px-2 py-0.5 rounded sm:rounded-lg w-full">
+                      {/* Mostrar según displayMode del nodo */}
+                      {(node as any).displayMode === 'both' && (
+                        <>
+                          {node.temp !== undefined ? <span className="text-red-400 drop-shadow-sm">{node.temp.toFixed(1)}°</span> : <span className="text-foreground/30">--°</span>}
+                          {node.hum  !== undefined ? <span className="text-blue-400 drop-shadow-sm">{node.hum.toFixed(0)}%</span>  : <span className="text-foreground/30">--%</span>}
+                        </>
+                      )}
+                      {(node as any).displayMode === 'temp' && (
+                        node.temp !== undefined ? <span className="text-red-400 drop-shadow-sm">{node.temp.toFixed(1)}°C</span> : <span className="text-foreground/30">--°C</span>
+                      )}
+                      {(node as any).displayMode === 'hum' && (
+                        node.hum !== undefined ? <span className="text-blue-400 drop-shadow-sm">{node.hum.toFixed(0)}%</span> : <span className="text-foreground/30">--%</span>
+                      )}
+                      {(node as any).displayMode === 'dist' && (
+                        node.waterDist !== undefined
+                          ? <span className="text-cyan-400 drop-shadow-sm text-[10px] sm:text-sm">{node.waterDist.toFixed(1)}cm</span>
+                          : <span className="text-foreground/30">--cm</span>
+                      )}
+                      {(node as any).displayMode === 'waterlevel' && (() => {
+                        const DIST_LLENO = 26;
+                        const DIST_VACIO = 30;
+                        const dist = node.waterDist;
+                        const pct = dist !== undefined
+                          ? Math.max(0, Math.min(100, Math.round((1 - (dist - DIST_LLENO) / (DIST_VACIO - DIST_LLENO)) * 100)))
+                          : null;
+                        const color = pct === null ? 'bg-foreground/20' : pct > 60 ? 'bg-cyan-400' : pct > 25 ? 'bg-yellow-400' : 'bg-red-500';
+                        return (
+                          <div className="flex flex-col items-center w-full gap-0.5">
+                            <span className="text-cyan-400 text-[9px] sm:text-xs font-bold">
+                              {pct !== null ? `${pct}%` : '--'}
+                            </span>
+                            <div className="w-full h-1.5 sm:h-2 bg-background/60 rounded-full overflow-hidden border border-border/40">
+                              <div
+                                className={`h-full rounded-full transition-all duration-700 ${color}`}
+                                style={{ width: pct !== null ? `${pct}%` : '0%' }}
+                              />
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })()}
-                    {(node as any).displayMode === 'level' && node.isLevelMax !== undefined && (
-                      <span className={node.isLevelMax ? 'text-red-500 font-bold' : 'text-green-500'}>
-                        {node.isLevelMax ? '⚠ LLENO' : '✓ OK'}
-                      </span>
-                    )}
-                    {!(node as any).displayMode && (
-                      <>
-                        {node.temp !== undefined && <span className="text-red-400">{node.temp.toFixed(1)}°</span>}
-                        {node.hum  !== undefined && <span className="text-blue-400">{node.hum.toFixed(0)}%</span>}
-                      </>
-                    )}
-                  </div>
-                )}
+                        );
+                      })()}
+                      {(node as any).displayMode === 'level' && node.isLevelMax !== undefined && (
+                        <span className={node.isLevelMax ? 'text-red-500 font-bold' : 'text-green-500'}>
+                          {node.isLevelMax ? '⚠ LLENO' : '✓ OK'}
+                        </span>
+                      )}
+                      {!(node as any).displayMode && (
+                        <>
+                          {node.temp !== undefined && <span className="text-red-400">{node.temp.toFixed(1)}°</span>}
+                          {node.hum  !== undefined && <span className="text-blue-400">{node.hum.toFixed(0)}%</span>}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* ===== BANDEJA DE MANDOS DEBAJO DE LA FOTO ===== */}
+          <div className="pt-3 border-t border-border/60">
+            <div className="flex items-center justify-between mb-2.5">
+              <div className="flex items-center gap-2">
+                <Power className="w-4 h-4 text-primary" />
+                <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-foreground/80">
+                  Panel de Actuadores y Relés (10)
+                </h3>
               </div>
-            );
-          })}
+              <span className="text-[10px] text-foreground/50">Toca para encender / apagar</span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2.5">
+              {nodes.filter(n => n.type === 'control').map(ctrl => {
+                const pinNum = PIN_MAP[ctrl.id];
+                return (
+                  <button
+                    key={ctrl.id}
+                    onClick={() => toggleControl(ctrl.id)}
+                    className={`px-3 py-2 sm:py-2.5 rounded-xl border text-left transition-all flex items-center justify-between gap-2 ${
+                      ctrl.isActive
+                        ? 'bg-card border-primary shadow-sm shadow-primary/20 ring-1 ring-primary/40'
+                        : 'bg-card/50 border-border hover:bg-card'
+                    }`}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-2 h-2 rounded-full ${ctrl.isActive ? (ctrl.activeColor || 'bg-primary animate-pulse') : 'bg-foreground/20'}`} />
+                        <p className="text-xs font-bold truncate text-foreground">{ctrl.name}</p>
+                      </div>
+                      <p className="text-[10px] text-foreground/50 truncate mt-0.5">R{pinNum} · {ctrl.subLabel}</p>
+                    </div>
+
+                    {/* Switch táctil rápido */}
+                    <div className={`w-8 h-4 sm:w-9 sm:h-5 rounded-full relative transition-colors border shadow-inner flex-shrink-0 ${
+                      ctrl.isActive ? (ctrl.activeColor || 'bg-primary') : 'bg-secondary border-border'
+                    }`}>
+                      <div className={`absolute top-0.5 w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-white shadow-sm transition-all duration-200 ${
+                        ctrl.isActive ? 'right-0.5' : 'left-0.5'
+                      }`} />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       ) : (
         /* ================= VISTA PANEL TÁCTIL (MÓVIL / ESCRITORIO) ================= */
