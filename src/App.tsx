@@ -137,17 +137,17 @@ function App() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         {/* Alerta de Crash Log */}
-        {telemetry?.mega2_crash_mem && telemetry.mega2_crash_mem > 0 && (
+        {((telemetry?.mega2_crash_mem ?? 0) > 0) && (
           <div className="mb-6 bg-red-500/10 border border-red-500/50 text-red-500 rounded-xl p-4 flex items-center gap-3">
             <AlertTriangle className="w-6 h-6 flex-shrink-0" />
             <div>
               <h4 className="font-bold">¡Cuelgue del sistema detectado!</h4>
-              <p className="text-sm">El MEGA2 se reinició recientemente. Memoria justo antes del cuelgue: {telemetry.mega2_crash_mem} bytes.</p>
+              <p className="text-sm">El MEGA2 se reinició recientemente. Memoria justo antes del cuelgue: {telemetry?.mega2_crash_mem} bytes.</p>
             </div>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-[7] lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           
           {/* Quick Stats Cards */}
           <div className="bg-card border border-border rounded-2xl p-6 shadow-sm flex items-start justify-between group hover:border-primary/50 transition-colors">
