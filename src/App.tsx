@@ -384,14 +384,14 @@ function App() {
         <LiveCharts telemetry={telemetry} />
 
         {/* Histórico Area debajo del Grid Principal */}
-        <div className="mt-8 bg-card border border-border rounded-2xl p-6 shadow-sm min-h-[400px] flex flex-col">
-          <div className="flex justify-between items-center mb-6">
-             <h2 className="text-xl font-bold">Histórico 24h</h2>
-             <div className="bg-secondary/50 text-foreground/70 text-xs font-medium rounded-lg px-3 py-1.5 border border-border">
+        <div className="mt-8 bg-card border border-border rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm min-h-[400px] flex flex-col">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-4 sm:mb-6">
+             <h2 className="text-lg sm:text-xl font-bold">Histórico 24h</h2>
+             <div className="bg-secondary/50 text-foreground/70 text-xs font-medium rounded-lg px-3 py-1.5 border border-border w-fit">
                Mostrando: Valores Medios Globales (Aire y Agua)
              </div>
           </div>
-          <div className="flex-1 -mx-4">
+          <div className="flex-1 w-full">
             <HistoryChart />
           </div>
         </div>

@@ -42,12 +42,12 @@ export function LiveCharts({ telemetry }: LiveChartsProps) {
            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
            Streaming Tiempo Real: Temperaturas (5)
         </h2>
-        <div className="h-[220px] sm:h-[280px] -mx-2">
+        <div className="h-[220px] sm:h-[280px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: 5, right: 10, bottom: 5, left: -25 }}>
+            <LineChart data={data} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
               <XAxis dataKey="time" stroke="hsl(var(--foreground)/0.5)" fontSize={10} tickLine={false} interval="preserveStartEnd" minTickGap={40} />
-              <YAxis stroke="hsl(var(--foreground)/0.5)" fontSize={10} tickLine={false} tickFormatter={v => `${v}°`} domain={['dataMin - 1', 'dataMax + 1']} />
+              <YAxis width={32} stroke="hsl(var(--foreground)/0.5)" fontSize={10} tickLine={false} tickFormatter={v => `${v}°`} domain={['dataMin - 1', 'dataMax + 1']} />
               <Tooltip 
                 contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '0.75rem', fontSize: '11px' }}
                 itemStyle={{ padding: 0 }}
@@ -69,12 +69,12 @@ export function LiveCharts({ telemetry }: LiveChartsProps) {
            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
            Streaming Tiempo Real: Humedad (3)
         </h2>
-        <div className="h-[220px] sm:h-[280px] -mx-2">
+        <div className="h-[220px] sm:h-[280px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: 5, right: 10, bottom: 5, left: -25 }}>
+            <LineChart data={data} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
               <XAxis dataKey="time" stroke="hsl(var(--foreground)/0.5)" fontSize={10} tickLine={false} interval="preserveStartEnd" minTickGap={40} />
-              <YAxis stroke="hsl(var(--foreground)/0.5)" fontSize={10} tickLine={false} tickFormatter={v => `${v}%`} domain={['auto', 'auto']} />
+              <YAxis width={32} stroke="hsl(var(--foreground)/0.5)" fontSize={10} tickLine={false} tickFormatter={v => `${v}%`} domain={['auto', 'auto']} />
               <Tooltip 
                 contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '0.75rem', fontSize: '11px' }}
                 itemStyle={{ padding: 0 }}

@@ -58,7 +58,7 @@ export function HistoryChart() {
         </div>
       ) : (
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 15, right: 10, bottom: 15, left: -15 }}>
+        <LineChart data={data} margin={{ top: 15, right: 10, bottom: 15, left: 5 }}>
           <XAxis 
             dataKey="time" 
             stroke="hsl(var(--foreground) / 0.5)" 
@@ -74,7 +74,7 @@ export function HistoryChart() {
             fontSize={12} 
             tickLine={false} 
             axisLine={false} 
-            dx={-10}
+            width={48}
             tickFormatter={(value) => `${value}°C`}
             domain={['dataMin - 2', 'dataMax + 2']}
           />
@@ -85,7 +85,7 @@ export function HistoryChart() {
             fontSize={12} 
             tickLine={false} 
             axisLine={false} 
-            dx={10}
+            width={42}
             tickFormatter={(value) => `${value}%`}
             domain={['dataMin - 5', 'dataMax + 5']}
           />
